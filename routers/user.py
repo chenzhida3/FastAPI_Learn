@@ -8,27 +8,15 @@
 @Describe: 用户接口
 @License : myself learn
 """
-from fastapi import APIRouter, Request
-from fastapi import Depends, HTTPException, Header
+from fastapi import APIRouter, Request, Depends, HTTPException, Header
 from models.get_db import get_db
-from jose import JWTError, jwt
-from passlib.context import CryptContext
-from config import *
 from common.jsontools import *
 from models.crud import *
+from common.jwtTool import JWT_tool
 from common.configLog import Logger
 logger = Logger('routers.user').getLog()
 
 usersRouter = APIRouter()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-def get_password_hash(password):
-    return pwd_context.hash(password)
 
 
 # 新建用户
@@ -46,7 +34,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     if db_crest:
         return resp_200(code=100104, message="用户名重复", data="")
     try:
-        user.password = get_password_hash(user.password)
+        user.password = JWT_tool.get_password_hash(user.password)
     except Exception as e:
         logger.exception(e)
         return resp_200(code=100105, data="", message="密码加密失败")
@@ -57,3 +45,4 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     except Exception as e:
         logger.exception(e)
         return resp_200(code=100101, data="", message="注册失败")
+

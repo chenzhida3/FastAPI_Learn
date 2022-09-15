@@ -26,3 +26,11 @@ class UserCreate(UserBase):
     studentnum: Optional[int] = None
     sex: str = "男"
     age: int
+
+
+class UserLogin(UserBase):
+    password: str
+
+
+class UsernameRole(UserBase):
+    role: str
