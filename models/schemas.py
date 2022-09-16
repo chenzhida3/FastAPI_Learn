@@ -34,3 +34,7 @@ class UserLogin(UserBase):
 
 class UsernameRole(UserBase):
     role: str
+
+
+class UsersToken(UserBase):
+    token: str

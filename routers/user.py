@@ -14,6 +14,7 @@ from common.jsontools import *
 from models.crud import *
 from common.jwtTool import JWT_tool
 from common.configLog import Logger
+from config import *
 logger = Logger('routers.user').getLog()
 
 usersRouter = APIRouter()
@@ -46,3 +47,23 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
         logger.exception(e)
         return resp_200(code=100101, data="", message="注册失败")
 
+
+# 登录接口
+@usersRouter.post("/login", tags=["users"], response_model=UsersToken)
+async def user_login(request: Request, user: UserLogin, db: Session = Depends(get_db)):
+    get_db_user = get_user_username(db, user.username)
+    if not get_db_user:
+        logger.info('登录的用户不存在')
+        return resp_200(code=100205, message='用户不存在', data="")
+    verifypassowrd = JWT_tool.verify_password(user.password, get_db_user.password)
+    if verifypassowrd:  # 如果密码校验通过
+        user_redis_token = await request.app.state.redis.get(user.username)
+        if not user_redis_token:
+            try:
+                token = JWT_tool.create_access_token(data={"sub": user.username})
+            except Exception as e:
+                logger.exception(e)
+                return resp_200(code=100203, message='产生token失败', data='')
+            await request.app.state.redis.set(user.username, token)
+            return resp_200(code=200, message='成功', data={"username": user.username, "token": token})
+        return resp_200(code=200, message='成功', data={"username": user.username, "token": user_redis_token})
