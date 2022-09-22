@@ -49,7 +49,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
 
 
 # 登录接口
-@usersRouter.post("/login", tags=["users"], response_model=UsersToken)
+@usersRouter.post("/login", tags=["users"])
 async def user_login(request: Request, user: UserLogin, db: Session = Depends(get_db)):
     get_db_user = get_user_username(db, user.username)
     if not get_db_user:
