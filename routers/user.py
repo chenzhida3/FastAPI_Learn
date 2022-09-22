@@ -103,3 +103,15 @@ async def user_login(request: Request, user: UserLogin, db: Session = Depends(ge
                 res = {"num": errornum, "time": times}
                 await request.app.state.redis.hmset(user.username + "_password", res)
                 return resp_200(code=100206, data={'message': f'您还有{5-errornum}次机会，超过将锁定账号30分钟'}, message='密码错误')
+
+
+@usersRouter.get('/info', response_model=UserBase)
+async def userInfo(user: UsernameRole = Depends(JWT_tool.get_cure_user), db: Session = Depends(get_db)):
+    user_name = get_user_username(db, username=user.username)
+    data = {'username': user_name.username, 'sex': user_name.sex, 'age': user_name.age}
+    user_role = get_role_name(db, user_name.role)
+    if user_role.name == '学生':
+        data['studentnum'] = user_name.studentnum
+    else:
+        data['jobnum'] = user_name.jobnum
+    return resp_200(code=200, message='成功', data=data)

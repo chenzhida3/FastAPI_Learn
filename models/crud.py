@@ -30,3 +30,7 @@ def db_create_user(db: Session, user: UserCreate):
 
 def get_user_username(db: Session, username: str):
     return db.query(User).filter(User.username == username, User.status == False).first()
+
+
+def get_role_name(db: Session, id: id):
+    return db.query(Role).filter(Role.id == id).first()
