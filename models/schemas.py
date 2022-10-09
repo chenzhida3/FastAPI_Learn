@@ -48,3 +48,21 @@ class UserChangePassword(BaseModel):
 class MessageConnect(BaseModel):
     userId: int
     connect: str
+
+
+class Messages(BaseModel):
+    id: int
+    senduser: str
+    acceptusers: str
+    read: bool
+    sendtime: str
+    addtime: str
+    context: str
+
+
+class MessagePid(Messages):
+    pid: int
+
+
+class MessageOne(Messages):
+    pid: List[MessagePid] = []

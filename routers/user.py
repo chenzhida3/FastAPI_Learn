@@ -9,6 +9,7 @@
 @License : myself learn
 """
 from fastapi import APIRouter, Request, Depends, HTTPException, Header
+from fastapi.encoders import jsonable_encoder
 from models.get_db import get_db
 from common.jsontools import *
 from models.crud import *
@@ -165,6 +166,42 @@ async def addMessage(message: MessageConnect, user: UsernameRole = Depends(JWT_t
     db.commit()
     db.refresh(connect)
     return resp_200(code=200, message='成功', data={})
+
+
+# 查看留言接口
+@usersRouter.get(path='/msg')
+async def viewMessage(id: int, user: UsernameRole=Depends(JWT_tool.get_cure_user), db: Session=Depends(get_db)):
+    useris = get_user_username(db, user.username)
+    message =get_message(db, id)
+    if not message:
+        return resp_200(code=100601, message='留言不存在', data={})
+    if message.acceptusers != useris.id and message.senduser != useris.id:
+        return resp_200(code=100602, message='权限不足,无法查看与自己无关的留言', data={})
+    message.read = True
+    db.commit()
+    db.refresh(message)
+
+    all_pid = get_pid_message(db, message.id)
+    messageone = MessageOne(id=message.id,
+                            senduser=get_user(db, message.senduser).username,
+                            acceptusers=get_user(db, message.acceptusers).username,
+                            read=message.read,
+                            sendtime=message.sendtime,
+                            addtime=str(message.addtime),
+                            context=message.context)
+    if len(all_pid)>0:
+        allPid_list = []
+        for item in all_pid:
+            message = MessagePid(id=message.id,
+                                 senduser=get_user(db, item.senduser).username,
+                                 acceptusers=get_user(db, item.acceptusers).username,
+                                 read=item.read,
+                                 sendtime=item.sendtime,
+                                 addtime=str(item.addtime),
+                                 context=item.context, pid=item.pid)
+            allPid_list.append(message)
+        message.pid = allPid_list
+    return resp_200(code=200, message='成功', data=jsonable_encoder(messageone))
 
 
 

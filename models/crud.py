@@ -8,6 +8,7 @@
 @Describe: 数据库操作
 @License : myself learn
 """
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 from models.schemas import *
 from models.model import *
@@ -34,3 +35,11 @@ def get_user_username(db: Session, username: str):
 
 def get_role_name(db: Session, id: id):
     return db.query(Role).filter(Role.id == id).first()
+
+
+def get_message(db: Session, id: int):
+    return db.query(Message).filter(Message.id == id, Message.status == False).first()
+
+
+def get_pid_message(db: Session, message: int):
+    return db.query(Message).filter(and_(Message.id != message, Message.pid == message, Message.status == False)).all()
