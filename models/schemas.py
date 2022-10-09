@@ -38,3 +38,8 @@ class UsernameRole(UserBase):
 
 class UsersToken(UserBase):
     token: str
+
+
+class UserChangePassword(BaseModel):
+    password: str
+    newPassword: str

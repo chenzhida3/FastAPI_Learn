@@ -49,7 +49,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
 
 
 # 登录接口
-@usersRouter.post("/login", tags=["users"])
+@usersRouter.post("/login")
 async def user_login(request: Request, user: UserLogin, db: Session = Depends(get_db)):
     get_db_user = get_user_username(db, user.username)
     if not get_db_user:
@@ -115,3 +115,43 @@ async def userInfo(user: UsernameRole = Depends(JWT_tool.get_cure_user), db: Ses
     else:
         data['jobnum'] = user_name.jobnum
     return resp_200(code=200, message='成功', data=data)
+
+
+@usersRouter.post('/changePwd')
+async def changePassword(request: Request, userChangePwd: UserChangePassword,
+                         user: UsernameRole = Depends(JWT_tool.get_cure_user), db: Session = Depends(get_db)):
+    if userChangePwd.password == userChangePwd.newPassword:
+        return resp_200(code=100304, message='新旧密码不能一样', data={})
+    if len(userChangePwd.newPassword)<6 or len(userChangePwd.newPassword)>16:
+        return resp_200(code=100303, message='新密码长度不匹配', data={})
+    username = user.username
+    user_name_db = get_user_username(db, username)
+    verify = JWT_tool.verify_password(userChangePwd.password, user_name_db.password)
+    if verify:
+        # 旧密码校验通过
+        hashpassword = JWT_tool.get_password_hash(userChangePwd.newPassword)
+        user_name_db.password = hashpassword
+        try:
+            db.commit()
+            db.refresh(user_name_db)
+        except Exception as e:
+            logger.exception(e)
+            return resp_200(code=100302, message='密码保存失败', data={})
+        # 删除旧redis数据
+        await request.app.state.redis.delete(user.username+"_password")
+        await request.app.state.redis.delete(user.username+"_token")
+        return resp_200(code=200, message="成功", data={"username": user.username, "message": "修改密码成功"})
+    return resp_200(code=100301, message='旧密码校验失败', data={})
+
+
+
+
+
+
+
+
+
+
+
+
+
