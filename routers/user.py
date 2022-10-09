@@ -105,6 +105,7 @@ async def user_login(request: Request, user: UserLogin, db: Session = Depends(ge
                 return resp_200(code=100206, data={'message': f'您还有{5-errornum}次机会，超过将锁定账号30分钟'}, message='密码错误')
 
 
+# 获取个人信息接口
 @usersRouter.get('/info', response_model=UserBase)
 async def userInfo(user: UsernameRole = Depends(JWT_tool.get_cure_user), db: Session = Depends(get_db)):
     user_name = get_user_username(db, username=user.username)
@@ -117,6 +118,7 @@ async def userInfo(user: UsernameRole = Depends(JWT_tool.get_cure_user), db: Ses
     return resp_200(code=200, message='成功', data=data)
 
 
+# 修改密码接口
 @usersRouter.post('/changePwd')
 async def changePassword(request: Request, userChangePwd: UserChangePassword,
                          user: UsernameRole = Depends(JWT_tool.get_cure_user), db: Session = Depends(get_db)):
@@ -142,6 +144,27 @@ async def changePassword(request: Request, userChangePwd: UserChangePassword,
         await request.app.state.redis.delete(user.username+"_token")
         return resp_200(code=200, message="成功", data={"username": user.username, "message": "修改密码成功"})
     return resp_200(code=100301, message='旧密码校验失败', data={})
+
+
+# 添加留言接口
+@usersRouter.post(path='/addMsg')
+async def addMessage(message: MessageConnect, user: UsernameRole = Depends(JWT_tool.get_cure_user),
+                     db: Session = Depends(get_db)):
+    if len(message.connect)>300 or len(message.connect)<5:
+        return resp_200(code=100502, message='留言文案长度在5-300个字符', data={})
+    user_name = get_user_username(db, user.username)
+    rev_user = get_user(db, message.userId)
+    if not rev_user:
+        return resp_200(code=100503, message='留言的用户不存在', data={})
+    if rev_user.id == user_name.id:
+        return resp_200(code=100501, message='不能给自己留言', data={})
+    times = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S")
+    connect = Message(senduser=user_name.id, acceptusers=rev_user.id,
+                      context=message.connect, sendtime=times, addtime=times, read=False)
+    db.add(connect)
+    db.commit()
+    db.refresh(connect)
+    return resp_200(code=200, message='成功', data={})
 
 
 

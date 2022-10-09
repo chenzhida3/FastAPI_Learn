@@ -43,3 +43,8 @@ class UsersToken(UserBase):
 class UserChangePassword(BaseModel):
     password: str
     newPassword: str
+
+
+class MessageConnect(BaseModel):
+    userId: int
+    connect: str
