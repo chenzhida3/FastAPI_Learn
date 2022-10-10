@@ -8,7 +8,7 @@
 @Describe: 数据库操作
 @License : myself learn
 """
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 from models.schemas import *
 from models.model import *
@@ -43,3 +43,8 @@ def get_message(db: Session, id: int):
 
 def get_pid_message(db: Session, message: int):
     return db.query(Message).filter(and_(Message.id != message, Message.pid == message, Message.status == False)).all()
+
+
+def get_message_list(db: Session, userId: int):
+    return db.query(Message).filter(or_(Message.senduser == userId, Message.acceptusers == userId,
+                                        Message.status == 0)).all()

@@ -204,6 +204,68 @@ async def viewMessage(id: int, user: UsernameRole=Depends(JWT_tool.get_cure_user
     return resp_200(code=200, message='成功', data=jsonable_encoder(messageone))
 
 
+# 留言列表接口
+@usersRouter.get(path='/msg_list')
+async def message_list(user: UsernameRole = Depends(JWT_tool.get_cure_user), db: Session = Depends(get_db)):
+    users = get_user_username(db, user.username)
+    msgList = get_message_list(db, users.id)
+    msg_list = []
+    mainMsg = []
+    if len(msgList) > 0:
+        for item in msgList:
+            if not item.pid:
+                messageOne = Message(id=item.id,
+                                     senduser=get_user(db, item.senduser).username,
+                                     acceptusers=get_user(db, item.acceptusers).username,
+                                     read=item.read,
+                                     sendtime=item.sendtime,
+                                     addtime=str(item.addtime),
+                                     context=item.context)
+                mainMsg.append(messageOne.id)
+                all_pid = get_pid_message(db, item.id)
+                if len(all_pid) > 0:
+                    all_pid_list = []
+                    for items in all_pid:
+                        message = MessagePid(id=items.id,
+                                             senduser=get_user(db, items.senduser).username,
+                                             acceptusers=get_user(db, items.acceptusers).username,
+                                             read=items.read,
+                                             sendtime=items.sendtime,
+                                             addtime=str(items.addtime),
+                                             context=items.context,
+                                             pid=items.pid)
+                        all_pid_list.append(message)
+                    messageOne.pid = all_pid_list
+                msg_list.append(messageOne)
+            else:
+                if item.pid not in mainMsg:
+                    message = get_message(db, item.pid)
+                    if message:
+                        all_pid = get_pid_message(db, message.id)
+                        messageone = MessageOne(id=message.id,
+                                                senduser=get_user(db, message.senduser).username,
+                                                acceptusers=get_user(db, message.acceptusers).username,
+                                                read=message.read,
+                                                sendtime=message.sendtime,
+                                                addtime=str(message.addtime),
+                                                context=message.context)
+                        if len(all_pid) > 0:
+                            allpidlist = []
+                            for item in all_pid:
+                                messagepid = MessagePid(id=message.id,
+                                                        senduser=get_user(db, item.senduser).username,
+                                                        acceptusers=get_user(db, item.acceptusers).username,
+                                                        read=item.read,
+                                                        sendtime=item.sendtime,
+                                                        addtime=str(item.addtime),
+                                                        context=item.context, pid=item.pid)
+                                allpidlist.append(messagepid)
+                            messageone.pid = allpidlist
+                        msg_list.append(messageone)
+    return resp_200(code=200, message='成功', data=jsonable_encoder(msg_list))
+
+
+
 
 
 
