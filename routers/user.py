@@ -8,7 +8,7 @@
 @Describe: 用户接口
 @License : myself learn
 """
-from fastapi import APIRouter, Request, Depends, HTTPException, Header
+from fastapi import APIRouter, Request, Depends, HTTPException, Header, Body
 from fastapi.encoders import jsonable_encoder
 from models.get_db import get_db
 from common.jsontools import *
@@ -264,6 +264,34 @@ async def message_list(user: UsernameRole = Depends(JWT_tool.get_cure_user), db:
                         msg_list.append(messageone)
     return resp_200(code=200, message='成功', data=jsonable_encoder(msg_list))
 
+# 回复留言接口
+@usersRouter.post(path='/rebackmessage')
+async def rebackmessage(rebackmessage: RebackMessageConnet, user: UsernameRole=Depends(JWT_tool.get_cure_user),
+                        db: Session = Depends(get_db)):
+    if rebackmessage.connect == '':
+        return resp_200(code=100802, message='回复留言内容不能为空', data={"msg": '回复留言内容不能为空'})
+    if len(rebackmessage.connect) > 500 or len(rebackmessage.connect) < 5:
+        return resp_200(code=100803, message='回复内容应该在5', data={"msg": '回复内容应该在5'})
+    users = get_user_username(db, user.username)
+    message = get_message(db, rebackmessage.rebackId)
+    if not message:
+        return resp_200(code=100804, message='回复留言id不存在', data={"msg": '回复留言id不存在'})
+    db_create_rebackMessage(db, rebackmessage, users.id)
+    return resp_200(code=1000, message='成功', data={"msg": '成功'})
+
+# 删除留言接口
+@usersRouter.post(path='/deletemessage/{id}')
+async def deletemessage(id: int, user: UsernameRole = Depends(JWT_tool.get_cure_user), db: Session = Depends(get_db)):
+    message = get_message(db=db, id=id)
+    if not message:
+        return resp_200(code=100901, message='删除的留言不存在',data={})
+    useris = get_user_username(db=db, username=user.username)
+    if useris.id != message.acceptusers and useris.id != message.senduser:
+        return resp_200(code=100902, message='权限不足', data={})
+    message.status = 1
+    db.commit()
+    db.refresh(message)
+    return resp_200(code=200, message='success', data={"message":'success'})
 
 
 

@@ -66,3 +66,14 @@ class MessagePid(Messages):
 
 class MessageOne(Messages):
     pid: List[MessagePid] = []
+
+
+class RebackMessageConnet(MessageConnect):
+    rebackId: int
+
+class Courses(BaseModel):
+    name: str
+    icon: Optional[str]
+    desc: Optional[str]
+    catalog: Optional[str]
+    likenum: int

@@ -48,3 +48,28 @@ def get_pid_message(db: Session, message: int):
 def get_message_list(db: Session, userId: int):
     return db.query(Message).filter(or_(Message.senduser == userId, Message.acceptusers == userId,
                                         Message.status == 0)).all()
+
+
+def db_create_rebackMessage(db: Session, reback: RebackMessageConnet, sendUser: int):
+    times = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S")
+    reback = Message(pid=reback.userId, context=reback.connect)
+    reback.sendtime = times
+    reback.senduser = sendUser
+    db.add(reback)
+    db.commit()
+    db.refresh(reback)
+    return reback
+
+def db_create_course(db: Session, course: Courses, user:int):
+    """创建课程"""
+    course = Course(**course.dict())
+    course.owner = user
+    db.add(course)
+    db.commit()
+    db.refresh(course)
+    return course
+
+def db_get_courese_name(db: Session, name:str):
+    """根据课程名称查找数据库"""
+    return db.query(Course).filter(Course.name == name, Course.status == False).first()
+

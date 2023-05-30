@@ -10,6 +10,7 @@
 """
 from fastapi import FastAPI, Request, Query
 from routers.user import usersRouter
+from routers.course import courseRouter
 import aioredis
 import uvicorn
 from config import *
@@ -38,6 +39,7 @@ async def shutdown_event():
 
 
 app.include_router(usersRouter, prefix="/user", tags=['users'])
+app.include_router(courseRouter, prefix="/course", tags=['course'])
 
 
 if __name__ == '__main__':

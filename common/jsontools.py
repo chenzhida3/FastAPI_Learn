@@ -22,10 +22,10 @@ def resp_200(*, code=200, data: Union[list, dict, str], message="Success") -> Re
                         })
 
 
-def resp_400(*, data: str = None, message: str = "Bad Request") -> Response:
+def resp_400(*, code=404, data: str = None, message: str = "Bad Request") -> Response:
     return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST,
                         content={
-                            'code': 400,
+                            'code': code,
                             'message': message,
                             'data': data
                         })
