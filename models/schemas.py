@@ -76,4 +76,32 @@ class Courses(BaseModel):
     icon: Optional[str]
     desc: Optional[str]
     catalog: Optional[str]
+    onsale: Optional[int]
+    owner: str
     likenum: int
+
+class CoursesCommentBase(BaseModel):
+    user: str
+    pid: int
+    addtime: str
+    context: str
+
+class Coursescomment(CoursesCommentBase):
+    id: int
+    top: int
+    
+class CousesDetail(Courses):
+    id: int
+    commonet: List[Coursescomment] = []
+
+class CoursesEdit(Courses):
+    id: int
+
+class Coursecomment(BaseModel):
+    id: int
+    comments: str
+    pid: Optional[int]
+
+class onsaleModel(BaseModel):
+    id: int
+    onsale: bool

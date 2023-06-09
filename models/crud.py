@@ -73,3 +73,43 @@ def db_get_courese_name(db: Session, name:str):
     """根据课程名称查找数据库"""
     return db.query(Course).filter(Course.name == name, Course.status == False).first()
 
+def db_get_course_id(db: Session, id: int):
+    """根据id查找课程详情"""
+    return db.query(Course).filter(Course.id == id, Course.status == False).first()
+
+def db_get_coursecomment_id(db:Session, course_id: int):
+    """根据课程id获取所有评论"""
+    return db.query(Commentcourse).filter(Commentcourse.course == course_id, Commentcourse.status == False).all()
+
+def createcomments(db: Session, cousecoment: Coursecomment, user: id):
+    """添加评论"""
+    comment = Commentcourse(**cousecoment.dict())
+    comment.users = user
+    db.add(comment)
+    db.commit()
+    db.refresh(comment)
+    return comment
+
+def get_cousecomments(db: Session, id: int):
+    """根据课程id获取评论"""
+    return db.query(Commentcourse).filter(Commentcourse.id == id, Commentcourse.status == False).all()
+
+def get_student(db: Session, couese: int, user:int):
+    """根据课程id和学生id获取数据"""
+    return db.query(Studentcourse).filter(Studentcourse.course == couese, Studentcourse.students == user, Studentcourse.status==False).first()
+
+def add_student_course(db: Session, couese: int, user:int):
+    """添加学生课程信息"""
+    studentcourse = Studentcourse(students=user, course=couese)
+    db.add(studentcourse)
+    db.commit()
+    db.refresh(studentcourse)
+    return studentcourse
+
+def get_student_all(db: Session, student:int):
+    """返回指定学生的所有课程"""
+    return db.query(Studentcourse).filter(Studentcourse.students == student, Studentcourse.status == False).all()
+
+def get_course_all(db:Session):
+    """返回所有课程"""
+    return db.query(Course).filter(Course.status==False).all()
